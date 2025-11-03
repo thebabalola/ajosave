@@ -1,22 +1,21 @@
-import type React from "react";
-import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
-import { Analytics } from "@vercel/analytics/next";
-import "./globals.css";
-import { Web3Provider } from "@/components/web3-provider";
-import { Suspense } from "react";
+import type React from "react"
+import type { Metadata } from "next"
+import { GeistSans } from "geist/font/sans"
+import { GeistMono } from "geist/font/mono"
+import { Analytics } from "@vercel/analytics/next"
+import "./globals.css"
+import { Web3Provider } from "@/components/web3-provider"
+import { Suspense } from "react"
 
 export const metadata: Metadata = {
   title: "Ajo - Community Savings on Base",
-  description:
-    "Save together, grow together. Decentralized community savings build on Base blockchain.",
-};
+  description: "Save together, grow together. Decentralized community savings build on Base blockchain.",
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="en" className="dark">
@@ -27,5 +26,5 @@ export default function RootLayout({
         <Analytics />
       </body>
     </html>
-  );
+  )
 }

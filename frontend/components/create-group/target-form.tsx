@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation"
 import { useAccount } from "wagmi"
 import { useCreateTarget } from "@/hooks/useBaseSafeContracts"
 
-const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS || "0x04F9CE8FDba78e489D2dF705c3498736EfBa6D28"
+const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS || "0x24642ffABF43D4bd33e1E883A23E10DdFde186c6"
 
 export function TargetForm() {
   const router = useRouter()

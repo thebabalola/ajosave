@@ -1,9 +1,31 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Validate that we have valid credentials (not placeholders)
+const isPlaceholder = supabaseUrl.includes('your-project-id') || supabaseUrl.includes('placeholder') || 
+                     supabaseAnonKey.includes('your-anon-key') || supabaseAnonKey.includes('placeholder')
+const isValidUrl = supabaseUrl && (supabaseUrl.startsWith('http://') || supabaseUrl.startsWith('https://')) && !isPlaceholder
+const hasValidKey = supabaseAnonKey && supabaseAnonKey.length > 20 && !isPlaceholder
+
+if (isPlaceholder || !isValidUrl || !hasValidKey) {
+  if (typeof window !== 'undefined') {
+    console.warn(
+      '⚠️ Supabase credentials are missing or invalid. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.\n' +
+      'Get your credentials from: https://app.supabase.com/project/_/settings/api'
+    )
+  }
+}
+
+// Only create client if we have valid credentials, otherwise use a safe dummy client
+// Using a valid Supabase URL format to avoid validation errors
+export const supabase = isValidUrl && hasValidKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : createClient(
+      'https://xxxxxxxxxxxxxxxxxxxx.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+    )
 
 export type Database = {
   public: {

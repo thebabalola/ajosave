@@ -101,8 +101,8 @@ const ERC20_ABI = [
   },
 ] as const
 
-const FACTORY_ADDRESS = (process.env.NEXT_PUBLIC_FACTORY_ADDRESS || '0x0') as `0x${string}`
-const TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_TOKEN_ADDRESS || '0x0') as `0x${string}`
+const FACTORY_ADDRESS = (process.env.NEXT_PUBLIC_FACTORY_ADDRESS || '0xa71C861930C0973AE57c577aC19EB7f11e7d74a6') as `0x${string}`
+const TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_TOKEN_ADDRESS || '0x24642ffABF43D4bd33e1E883A23E10DdFde186c6') as `0x${string}`
 
 // Helper to extract pool address from transaction receipt
 async function extractPoolAddress(publicClient: any, txHash: `0x${string}`): Promise<string | null> {

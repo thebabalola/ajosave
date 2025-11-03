@@ -13,7 +13,7 @@ const projectId = "80ad617c75ff0a3e14ee2636f4bbfe56";
 // 2. Create metadata object
 const metadata = {
   name: "BaseSafe",
-  description: "Decentralized Community Savings Platform on Celo",
+  description: "Decentralized Community Savings Platform on Celo & Base",
   url:
     typeof window !== "undefined"
       ? window.location.origin
@@ -21,71 +21,121 @@ const metadata = {
   icons: ["https://basesafe.app/icon.png"],
 };
 
-// 3. Define Hedera Testnet
-const hederaTestnet = defineChain({
-  id: 296,
-  name: "Hedera Testnet",
+// 3. Define Celo Sepolia Testnet
+const celoSepolia = defineChain({
+  id: 11142220,
+  name: "Celo Sepolia",
   nativeCurrency: {
-    name: "HBAR",
-    symbol: "HBAR",
+    name: "CELO",
+    symbol: "CELO",
     decimals: 18,
   },
   rpcUrls: {
     default: {
-      http: ["https://testnet.hashio.io/api"],
+      http: ["https://forno.celo-sepolia.celo-testnet.org"],
     },
     public: {
-      http: ["https://testnet.hashio.io/api"],
+      http: ["https://forno.celo-sepolia.celo-testnet.org"],
     },
   },
   blockExplorers: {
     default: {
-      name: "HashScan",
-      url: "https://hashscan.io/testnet",
-      apiUrl: "https://testnet.hashscan.io/api",
+      name: "CeloScan",
+      url: "https://sepolia.celoscan.io",
     },
   },
   testnet: true,
 });
 
-// 4. Define Hedera Mainnet (for future use)
-const hederaMainnet = defineChain({
-  id: 295,
-  name: "Hedera Mainnet",
+// 4. Define Celo Mainnet (for future use)
+const celoMainnet = defineChain({
+  id: 42220,
+  name: "Celo",
   nativeCurrency: {
-    name: "HBAR",
-    symbol: "HBAR",
+    name: "CELO",
+    symbol: "CELO",
     decimals: 18,
   },
   rpcUrls: {
     default: {
-      http: ["https://mainnet.hashio.io/api"],
+      http: ["https://forno.celo.org"],
     },
     public: {
-      http: ["https://mainnet.hashio.io/api"],
+      http: ["https://forno.celo.org"],
     },
   },
   blockExplorers: {
     default: {
-      name: "HashScan",
-      url: "https://hashscan.io/mainnet",
-      apiUrl: "https://mainnet.hashscan.io/api",
+      name: "CeloScan",
+      url: "https://celoscan.io",
     },
   },
   testnet: false,
 });
 
-// 5. Set the networks
-const networks = [hederaTestnet, hederaMainnet];
+// 5. Define Base Sepolia Testnet
+const baseSepolia = defineChain({
+  id: 84532,
+  name: "Base Sepolia",
+  nativeCurrency: {
+    name: "ETH",
+    symbol: "ETH",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://sepolia.base.org"],
+    },
+    public: {
+      http: ["https://sepolia.base.org"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "BaseScan",
+      url: "https://sepolia.basescan.org",
+    },
+  },
+  testnet: true,
+});
 
-// 6. Create Wagmi Adapter
+// 6. Define Base Mainnet (for future use)
+const baseMainnet = defineChain({
+  id: 8453,
+  name: "Base",
+  nativeCurrency: {
+    name: "ETH",
+    symbol: "ETH",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://mainnet.base.org"],
+    },
+    public: {
+      http: ["https://mainnet.base.org"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "BaseScan",
+      url: "https://basescan.org",
+    },
+  },
+  testnet: false,
+});
+
+// 7. Set the networks
+const networks = [celoSepolia, celoMainnet, baseSepolia, baseMainnet];
+
+// 8. Create Wagmi Adapter
 const wagmiAdapter = new WagmiAdapter({
   networks,
   projectId,
   ssr: true,
 });
 
-// 7. Create modal
+// 9. Create modal
 createAppKit({
   adapters: [wagmiAdapter],
   networks,
@@ -101,7 +151,7 @@ createAppKit({
   },
 });
 
-// 8. Setup queryClient
+// 10. Setup queryClient
 const queryClient = new QueryClient();
 
 export function Web3Provider({ children }: { children: ReactNode }) {
