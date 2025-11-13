@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-contracts/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /* ========== ROTATIONAL POOL ========== */
 contract BaseSafeRotational is Ownable(msg.sender) {
@@ -384,12 +384,8 @@ contract BaseSafeFactory {
     }
 
     modifier onlyOwner() {
-        _onlyOwner();
-        _;
-    }
-
-    function _onlyOwner() internal {
         require(msg.sender == owner, "only owner");
+        _;
     }
 
     function createRotational(
