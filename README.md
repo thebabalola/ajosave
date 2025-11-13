@@ -13,26 +13,27 @@ Ajosave is a decentralized finance (DeFi) platform that digitizes traditional co
 
 ### Key Features
 
-✨ **Three Pool Types:**
-- **Rotational Savings**: Traditional rotating payout system where members take turns receiving the pool
-- **Target Pool**: Collaborative savings toward a specific goal with deadline-based unlocking
-- **Flexible Pool**: Deposit and withdraw anytime with optional yield generation
+✨ **Three Pool Templates with Guided Setup:**
+- **Rotational Savings** – Traditional turn-based payouts with automated reminders and penalties
+- **Target Pool** – Lock contributions until your collective goal or deadline is reached
+- **Flexible Pool** – Let members deposit/withdraw anytime while routing idle funds into yield strategies
 
 🔒 **Security & Transparency:**
-- Smart contract escrow - funds are locked in audited contracts
-- Automatic enforcement of rules and penalties
-- Transparent on-chain activity tracking
-- No middlemen or custodial risks
+- Open-source Solidity contracts verified on Sourcify
+- Automatic enforcement of rules, penalties & grace periods
+- Activity feeds mirrored in Supabase for off-chain context
+- Non-custodial architecture—no treasurers or middlemen
 
 🌐 **Multi-Chain Support:**
-- **Celo Network**: Low-cost, mobile-friendly blockchain ideal for global accessibility
-- **Base Network**: Fast, low-cost L2 built on Ethereum
+- Deploy to **Celo** (mobile-first, low-fee) or **Base** (Ethereum L2) with a single codebase
+- WalletConnect / MetaMask integration with one-click network switching
+- Treasury address shared across chains for unified accounting
 
 📱 **Modern Web Interface:**
-- Responsive design for mobile and desktop
-- Wallet integration (WalletConnect, MetaMask, etc.)
-- Real-time activity tracking
-- Intuitive dashboard for managing groups
+- Redesigned hero, feature, and CTA sections with deployment stats
+- Dashboard tabs for groups, transactions, and profile management
+- Real-time activity feed powered by Supabase
+- shadcn/ui component system for cohesive theming
 
 ## 🏗️ Architecture
 

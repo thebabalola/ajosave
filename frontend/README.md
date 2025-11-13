@@ -95,10 +95,10 @@ Network configuration is in [`components/web3-provider.tsx`](./components/web3-p
 - **Next.js 15** - React framework
 - **Wagmi** - React hooks for Ethereum
 - **Viem** - TypeScript Ethereum library
-- **Reown AppKit** - Wallet connection UI
+- **Reown AppKit** - Wallet connection & network switching UI
 - **Supabase** - Database and backend
 - **Tailwind CSS** - Styling
-- **shadcn/ui** - UI component library
+- **shadcn/ui** - UI component library (12 custom components)
 - **Framer Motion** - Animations
 
 ## 🔧 Configuration
@@ -119,16 +119,14 @@ Quick checklist:
 - ✅ Enable Row Level Security policies
 - ✅ Add credentials to `.env.local`
 
-## 🎨 UI Components
+## 🎨 UI Components & Landing Page
 
-All UI components use shadcn/ui and are located in `components/ui/`:
-
-- `button.tsx` - Button component with variants
-- `card.tsx` - Card container
-- `input.tsx`, `textarea.tsx`, `label.tsx` - Form components
-- `select.tsx`, `dropdown-menu.tsx` - Selection components
-- `badge.tsx`, `avatar.tsx`, `progress.tsx` - Display components
-- `tabs.tsx`, `toast.tsx` - Navigation and feedback
+- Hero section now includes announcement badge, feature chips, CTA checklist, and deployment stats
+- `HowItWorks`, `Features`, `Security`, and `CTA` sections refreshed with new content and motion
+- All UI components use shadcn/ui and are located in `components/ui/`:
+  - `button.tsx`, `input.tsx`, `label.tsx`, `textarea.tsx`
+  - `card.tsx`, `badge.tsx`, `avatar.tsx`, `progress.tsx`
+  - `select.tsx`, `dropdown-menu.tsx`, `tabs.tsx`, `toast.tsx`
 
 ## 🔐 Environment Variables
 
