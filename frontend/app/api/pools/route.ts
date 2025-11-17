@@ -197,7 +197,7 @@ export async function GET(req: NextRequest) {
     }
   } catch (error) {
     // Check if it's a table not found error
-    const errorObj = error as any
+    const errorObj = error as { code?: string; message?: string }
     if (errorObj?.code === 'PGRST205' || (error instanceof Error && error.message.includes("Could not find the table"))) {
       return NextResponse.json(
         { 
@@ -280,7 +280,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(data)
   } catch (error) {
     // Check if it's a table not found error
-    const errorObj = error as any
+    const errorObj = error as { code?: string; message?: string }
     if (errorObj?.code === 'PGRST205' || (error instanceof Error && error.message.includes("Could not find the table"))) {
       return NextResponse.json(
         { 

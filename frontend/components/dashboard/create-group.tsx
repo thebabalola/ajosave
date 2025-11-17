@@ -93,7 +93,7 @@ export function CreateGroup() {
         <Card className="p-6 bg-muted/30">
           <h3 className="text-lg font-semibold mb-2">Need help choosing?</h3>
           <p className="text-muted-foreground text-sm mb-4">
-            Not sure which savings mode is right for you? Here's a quick guide:
+            Not sure which savings mode is right for you? Here&apos;s a quick guide:
           </p>
           <ul className="space-y-2 text-sm">
             <li className="flex gap-2">

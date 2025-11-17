@@ -49,8 +49,11 @@ export function GroupActions({
   // Handle approval + transaction flow
   useEffect(() => {
     if (approveToken.isSuccess) {
-      setApproved(true)
-      setIsApproving(false)
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        setApproved(true)
+        setIsApproving(false)
+      }, 0)
     }
   }, [approveToken.isSuccess])
 

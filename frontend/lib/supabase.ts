@@ -266,7 +266,7 @@ export async function savePoolToDatabase({
     return { success: true, poolId, pool: pool[0] }
   } catch (error) {
     // Check if it's a table not found error
-    const errorObj = error as any
+    const errorObj = error as { code?: string; message?: string }
     if (errorObj?.code === 'PGRST205' || (error instanceof Error && error.message.includes("Could not find the table"))) {
       return {
         success: false,
