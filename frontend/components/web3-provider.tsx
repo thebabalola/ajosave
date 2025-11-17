@@ -138,6 +138,8 @@ const wagmiAdapter = new WagmiAdapter({
 // 9. Create modal
 createAppKit({
   adapters: [wagmiAdapter],
+  // @ts-expect-error - Networks are Chain[] from viem, but AppKit expects AppKitNetwork[]. 
+  // The WagmiAdapter already handles network configuration, so this is a type compatibility issue.
   networks,
   projectId,
   metadata,

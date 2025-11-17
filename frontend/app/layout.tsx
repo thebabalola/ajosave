@@ -12,7 +12,7 @@ if (typeof window !== "undefined") {
   const originalError = console.error
   const originalWarn = console.warn
   
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     const message = args[0]?.toString() || ""
     // Suppress analytics-related errors
     if (
@@ -32,7 +32,7 @@ if (typeof window !== "undefined") {
     originalError.apply(console, args)
   }
 
-  console.warn = (...args: any[]) => {
+  console.warn = (...args: unknown[]) => {
     const message = args[0]?.toString() || ""
     // Suppress analytics warnings
     if (
