@@ -79,9 +79,6 @@ After creating the tables, enable RLS policies:
    ```
 
 ## Troubleshooting
-
-### "Invalid API key" error
-- Double-check your `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - Make sure there are no extra spaces or quotes in your `.env.local` file
 
 ### "Table doesn't exist" error
@@ -94,7 +91,7 @@ After creating the tables, enable RLS policies:
 
 ## Next Steps
 
-Once your database is set up:
+Once your database 
 1. Test creating a pool through your application
 2. Check the Supabase Table Editor to see the data
 3. Set up proper RLS policies for production
