@@ -119,5 +119,4 @@ Ajosave solves these problems by:
 
 ---
 
-**Built with ❤️ for African communities and the global DeFi ecosystem**
 
