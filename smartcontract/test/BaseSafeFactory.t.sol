@@ -81,5 +81,40 @@ contract BaseSafeFactoryTest is Test {
         assertEq(factory.allRotational().length, 2);
         assertTrue(pool1 != pool2);
     }
+
+    function test_CreateTarget() public {
+        address[] memory members = new address[](2);
+        members[0] = user1;
+        members[1] = user2;
+        
+        uint256 targetAmount = 1000e18;
+        uint256 deadline = block.timestamp + 30 days;
+        uint256 treasuryFeeBps = 100; // 1%
+        
+        vm.expectEmit(true, true, false, false);
+        emit BaseSafeFactory.TargetCreated(address(0), user1);
+        
+        vm.prank(user1);
+        address pool = factory.createTarget(members, targetAmount, deadline, treasuryFeeBps);
+        
+        assertTrue(pool != address(0));
+        assertEq(factory.allTarget().length, 1);
+        assertEq(factory.allTarget()[0], pool);
+    }
+
+    function test_CreateTargetMultiple() public {
+        address[] memory members = new address[](2);
+        members[0] = user1;
+        members[1] = user2;
+        
+        vm.prank(user1);
+        address pool1 = factory.createTarget(members, 1000e18, block.timestamp + 30 days, 100);
+        
+        vm.prank(user2);
+        address pool2 = factory.createTarget(members, 2000e18, block.timestamp + 60 days, 100);
+        
+        assertEq(factory.allTarget().length, 2);
+        assertTrue(pool1 != pool2);
+    }
 }
 
