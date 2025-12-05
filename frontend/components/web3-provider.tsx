@@ -18,7 +18,11 @@ const metadata = {
     typeof window !== "undefined"
       ? window.location.origin
       : "https://ajosave.app",
-  icons: ["https://ajosave.app/icon.png"],
+  icons: [
+    typeof window !== "undefined"
+      ? `${window.location.origin}/icon.svg`
+      : "https://ajosave.app/icon.svg",
+  ],
 };
 
 // 3. Define Celo Sepolia Testnet

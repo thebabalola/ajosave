@@ -25,13 +25,25 @@ export default function GroupPage({ params }: { params: Promise<{ id: string }> 
 
   useEffect(() => {
     fetch(`/api/pools?id=${id}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          // Handle 503 errors gracefully (Supabase not configured)
+          if (res.status === 503) {
+            setLoading(false)
+            return
+          }
+          throw new Error(`Failed to load pool: ${res.status}`)
+        }
+        return res.json()
+      })
       .then(data => {
-        setPool(data)
+        if (data) {
+          setPool(data)
+        }
         setLoading(false)
       })
       .catch(err => {
-        console.error('Failed to load pool:', err)
+        // Silently handle errors - don't spam console for expected 503s
         setLoading(false)
       })
   }, [id])

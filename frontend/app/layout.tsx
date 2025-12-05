@@ -49,6 +49,11 @@ if (typeof window !== "undefined") {
 export const metadata: Metadata = {
   title: "AjoSave - Community Savings on Base",
   description: "Save together, grow together. Decentralized community savings build on Base blockchain.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 }
 
 export default function RootLayout({

@@ -32,6 +32,16 @@ export function GroupDetails({ groupId }: { groupId: string }) {
 
   useEffect(() => {
     fetchGroupData()
+
+    // Listen for pool update events
+    const handlePoolUpdate = () => {
+      fetchGroupData()
+    }
+    window.addEventListener('pool-updated', handlePoolUpdate)
+
+    return () => {
+      window.removeEventListener('pool-updated', handlePoolUpdate)
+    }
   }, [groupId])
 
   const fetchGroupData = async () => {
@@ -42,13 +52,21 @@ export function GroupDetails({ groupId }: { groupId: string }) {
       const response = await fetch(`/api/pools?id=${groupId}`)
 
       if (!response.ok) {
-        throw new Error("Failed to fetch group")
+        const errorData = await response.json().catch(() => ({}))
+        // Handle 503 errors gracefully (Supabase not configured)
+        if (response.status === 503) {
+          setError("Database not configured. Group data unavailable.")
+          setLoading(false)
+          return
+        }
+        throw new Error(errorData.error || "Failed to fetch group")
       }
 
       const data = await response.json()
       setGroup(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load group")
+      const errorMessage = err instanceof Error ? err.message : "Failed to load group"
+      setError(errorMessage)
       setLoading(false)
     } finally {
       setLoading(false)
