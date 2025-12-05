@@ -138,5 +138,98 @@ contract BaseSafeTargetTest is Test {
         assertTrue(pool.completed());
         assertEq(pool.totalContributed(), 1000e18);
     }
+
+    function test_Withdraw() public {
+        // Contribute and reach target
+        token.mint(user1, 1000e18);
+        vm.startPrank(user1);
+        token.approve(address(pool), 1000e18);
+        pool.contribute(1000e18);
+        vm.stopPrank();
+        
+        uint256 balanceBefore = token.balanceOf(user1);
+        
+        vm.prank(user1);
+        vm.expectEmit(true, false, false, false);
+        emit BaseSafeTarget.Withdrawal(user1, 990e18); // 1000 - 1% fee = 990
+        
+        pool.withdraw();
+        
+        assertGt(token.balanceOf(user1), balanceBefore);
+        assertEq(pool.contributions(user1), 0);
+    }
+
+    function test_WithdrawAfterDeadline() public {
+        // Contribute but don't reach target
+        token.mint(user1, 500e18);
+        vm.startPrank(user1);
+        token.approve(address(pool), 500e18);
+        pool.contribute(500e18);
+        vm.stopPrank();
+        
+        // Wait for deadline
+        vm.warp(block.timestamp + 31 days);
+        
+        uint256 balanceBefore = token.balanceOf(user1);
+        
+        vm.prank(user1);
+        pool.withdraw();
+        
+        // Should get proportional share minus fees
+        assertGt(token.balanceOf(user1), balanceBefore);
+    }
+
+    function test_WithdrawNotReady() public {
+        token.mint(user1, 500e18);
+        vm.startPrank(user1);
+        token.approve(address(pool), 500e18);
+        pool.contribute(500e18);
+        vm.stopPrank();
+        
+        vm.expectRevert("not ready");
+        pool.withdraw();
+    }
+
+    function test_WithdrawNoContribution() public {
+        vm.warp(block.timestamp + 31 days);
+        
+        vm.prank(user1);
+        vm.expectRevert("no contribution");
+        pool.withdraw();
+    }
+
+    function test_TreasuryWithdraw() public {
+        // Contribute and reach target
+        token.mint(user1, 1000e18);
+        vm.startPrank(user1);
+        token.approve(address(pool), 1000e18);
+        pool.contribute(1000e18);
+        vm.stopPrank();
+        
+        uint256 treasuryBalanceBefore = token.balanceOf(treasury);
+        
+        pool.treasuryWithdraw();
+        
+        // Treasury should receive 1% fee = 10e18
+        assertEq(token.balanceOf(treasury), treasuryBalanceBefore + 10e18);
+    }
+
+    function test_TreasuryWithdrawNotReady() public {
+        token.mint(user1, 500e18);
+        vm.startPrank(user1);
+        token.approve(address(pool), 500e18);
+        pool.contribute(500e18);
+        vm.stopPrank();
+        
+        vm.expectRevert("not ready");
+        pool.treasuryWithdraw();
+    }
+
+    function test_IsMember() public {
+        assertTrue(pool.isMember(user1));
+        assertTrue(pool.isMember(user2));
+        assertTrue(pool.isMember(user3));
+        assertFalse(pool.isMember(address(0x999)));
+    }
 }
 
