@@ -56,5 +56,61 @@ contract BaseSafeRotationalTest is Test {
         vm.expectRevert("need >=2 members");
         new BaseSafeRotational(address(token), members, 100e18, 7 days, 100, 50, treasury);
     }
+
+    function test_Deposit() public {
+        token.mint(user1, 1000e18);
+        vm.startPrank(user1);
+        token.approve(address(pool), 100e18);
+        
+        vm.expectEmit(true, false, false, false);
+        emit BaseSafeRotational.Deposit(user1, 100e18);
+        
+        pool.deposit();
+        vm.stopPrank();
+        
+        assertTrue(pool.hasDeposited(user1));
+        assertEq(token.balanceOf(address(pool)), 100e18);
+    }
+
+    function test_DepositMultipleMembers() public {
+        token.mint(user1, 1000e18);
+        token.mint(user2, 1000e18);
+        
+        vm.startPrank(user1);
+        token.approve(address(pool), 100e18);
+        pool.deposit();
+        vm.stopPrank();
+        
+        vm.startPrank(user2);
+        token.approve(address(pool), 100e18);
+        pool.deposit();
+        vm.stopPrank();
+        
+        assertTrue(pool.hasDeposited(user1));
+        assertTrue(pool.hasDeposited(user2));
+        assertEq(token.balanceOf(address(pool)), 200e18);
+    }
+
+    function test_DepositNotMember() public {
+        address nonMember = address(0x999);
+        token.mint(nonMember, 1000e18);
+        
+        vm.startPrank(nonMember);
+        token.approve(address(pool), 100e18);
+        vm.expectRevert("not member");
+        pool.deposit();
+        vm.stopPrank();
+    }
+
+    function test_DepositAlreadyDeposited() public {
+        token.mint(user1, 1000e18);
+        
+        vm.startPrank(user1);
+        token.approve(address(pool), 200e18);
+        pool.deposit();
+        vm.expectRevert("already deposited");
+        pool.deposit();
+        vm.stopPrank();
+    }
 }
 
