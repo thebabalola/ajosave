@@ -54,5 +54,89 @@ contract BaseSafeTargetTest is Test {
         vm.expectRevert("need >=2 members");
         new BaseSafeTarget(address(token), members, 1000e18, block.timestamp + 30 days, 100, treasury);
     }
+
+    function test_Contribute() public {
+        token.mint(user1, 1000e18);
+        
+        vm.startPrank(user1);
+        token.approve(address(pool), 500e18);
+        
+        vm.expectEmit(true, false, false, false);
+        emit BaseSafeTarget.Contributed(user1, 500e18);
+        
+        pool.contribute(500e18);
+        vm.stopPrank();
+        
+        assertEq(pool.contributions(user1), 500e18);
+        assertEq(pool.totalContributed(), 500e18);
+        assertEq(token.balanceOf(address(pool)), 500e18);
+    }
+
+    function test_ContributeMultiple() public {
+        token.mint(user1, 1000e18);
+        token.mint(user2, 1000e18);
+        
+        vm.startPrank(user1);
+        token.approve(address(pool), 400e18);
+        pool.contribute(400e18);
+        vm.stopPrank();
+        
+        vm.startPrank(user2);
+        token.approve(address(pool), 600e18);
+        pool.contribute(600e18);
+        vm.stopPrank();
+        
+        assertEq(pool.contributions(user1), 400e18);
+        assertEq(pool.contributions(user2), 600e18);
+        assertEq(pool.totalContributed(), 1000e18);
+        assertTrue(pool.completed());
+    }
+
+    function test_ContributeNotMember() public {
+        address nonMember = address(0x999);
+        token.mint(nonMember, 1000e18);
+        
+        vm.startPrank(nonMember);
+        token.approve(address(pool), 500e18);
+        vm.expectRevert("not member");
+        pool.contribute(500e18);
+        vm.stopPrank();
+    }
+
+    function test_ContributeAfterDeadline() public {
+        vm.warp(block.timestamp + 31 days);
+        
+        token.mint(user1, 1000e18);
+        vm.startPrank(user1);
+        token.approve(address(pool), 500e18);
+        vm.expectRevert("deadline passed");
+        pool.contribute(500e18);
+        vm.stopPrank();
+    }
+
+    function test_ContributeZeroAmount() public {
+        token.mint(user1, 1000e18);
+        vm.startPrank(user1);
+        token.approve(address(pool), 500e18);
+        vm.expectRevert("amount 0");
+        pool.contribute(0);
+        vm.stopPrank();
+    }
+
+    function test_TargetReached() public {
+        token.mint(user1, 1000e18);
+        
+        vm.startPrank(user1);
+        token.approve(address(pool), 1000e18);
+        
+        vm.expectEmit(false, false, false, false);
+        emit BaseSafeTarget.TargetReached();
+        
+        pool.contribute(1000e18);
+        vm.stopPrank();
+        
+        assertTrue(pool.completed());
+        assertEq(pool.totalContributed(), 1000e18);
+    }
 }
 
