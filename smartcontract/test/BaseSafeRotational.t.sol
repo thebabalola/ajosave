@@ -112,5 +112,86 @@ contract BaseSafeRotationalTest is Test {
         pool.deposit();
         vm.stopPrank();
     }
+
+    function test_TriggerPayout() public {
+        // All members deposit
+        token.mint(user1, 1000e18);
+        token.mint(user2, 1000e18);
+        token.mint(user3, 1000e18);
+        
+        vm.startPrank(user1);
+        token.approve(address(pool), 100e18);
+        pool.deposit();
+        vm.stopPrank();
+        
+        vm.startPrank(user2);
+        token.approve(address(pool), 100e18);
+        pool.deposit();
+        vm.stopPrank();
+        
+        vm.startPrank(user3);
+        token.approve(address(pool), 100e18);
+        pool.deposit();
+        vm.stopPrank();
+        
+        // Fast forward time
+        vm.warp(block.timestamp + 7 days);
+        
+        uint256 balanceBefore = token.balanceOf(user1);
+        uint256 treasuryBalanceBefore = token.balanceOf(treasury);
+        
+        vm.prank(address(0x999)); // relayer
+        pool.triggerPayout();
+        
+        // user1 should receive payout (minus fees)
+        // Total: 300e18, Treasury: 3e18 (1%), Relayer: 1.5e18 (0.5%), Payout: 295.5e18
+        assertGt(token.balanceOf(user1), balanceBefore);
+        assertGt(token.balanceOf(treasury), treasuryBalanceBefore);
+        assertEq(pool.currentRound(), 1);
+        assertFalse(pool.hasDeposited(user1));
+        assertFalse(pool.hasDeposited(user2));
+        assertFalse(pool.hasDeposited(user3));
+    }
+
+    function test_TriggerPayoutTooEarly() public {
+        token.mint(user1, 1000e18);
+        vm.startPrank(user1);
+        token.approve(address(pool), 100e18);
+        pool.deposit();
+        vm.stopPrank();
+        
+        vm.expectRevert("too early");
+        pool.triggerPayout();
+    }
+
+    function test_TriggerPayoutAfterAllRounds() public {
+        // Complete all 3 rounds
+        for (uint i = 0; i < 3; i++) {
+            token.mint(user1, 1000e18);
+            token.mint(user2, 1000e18);
+            token.mint(user3, 1000e18);
+            
+            vm.startPrank(user1);
+            token.approve(address(pool), 100e18);
+            pool.deposit();
+            vm.stopPrank();
+            
+            vm.startPrank(user2);
+            token.approve(address(pool), 100e18);
+            pool.deposit();
+            vm.stopPrank();
+            
+            vm.startPrank(user3);
+            token.approve(address(pool), 100e18);
+            pool.deposit();
+            vm.stopPrank();
+            
+            vm.warp(block.timestamp + 7 days);
+            pool.triggerPayout();
+        }
+        
+        assertFalse(pool.active());
+        assertEq(pool.currentRound(), 3);
+    }
 }
 
