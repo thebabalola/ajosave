@@ -48,5 +48,28 @@ contract BaseTokenTest is Test {
         token.mint(user1, amount);
         assertEq(token.balanceOf(user1), amount);
     }
+
+    function test_TransferOwnership() public {
+        token.transferOwnership(user1);
+        assertEq(token.owner(), user1);
+    }
+
+    function test_OnlyOwnerCanMint() public {
+        token.transferOwnership(user1);
+        
+        vm.prank(user1);
+        token.mint(user2, 100e18);
+        assertEq(token.balanceOf(user2), 100e18);
+        
+        vm.prank(user2);
+        vm.expectRevert("Only owner");
+        token.mint(user2, 100e18);
+    }
+
+    function test_OnlyOwnerCanTransferOwnership() public {
+        vm.prank(user1);
+        vm.expectRevert("Only owner");
+        token.transferOwnership(user1);
+    }
 }
 
