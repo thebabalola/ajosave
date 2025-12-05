@@ -29,7 +29,16 @@ export function GroupActivity({ groupId }: { groupId: string }) {
       fetchActivities(true)
     }, 5000)
 
-    return () => clearInterval(interval)
+    // Listen for pool update events
+    const handlePoolUpdate = () => {
+      fetchActivities()
+    }
+    window.addEventListener('pool-updated', handlePoolUpdate)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('pool-updated', handlePoolUpdate)
+    }
   }, [groupId])
 
   const fetchActivities = async (isAutoRefresh: boolean = false) => {
@@ -41,20 +50,25 @@ export function GroupActivity({ groupId }: { groupId: string }) {
       }
 
       const response = await fetch(`/api/pools?id=${groupId}`)
+      
+      if (!response.ok) {
+        // Handle 503 errors gracefully (Supabase not configured)
+        if (response.status === 503) {
+          setActivities([])
+          return
+        }
+        throw new Error(`Failed to fetch activities: ${response.status}`)
+      }
+
       const pool = await response.json()
 
-      console.log('Pool data received:', pool)
-      console.log('Pool activities:', pool.pool_activity)
-
       if (pool.pool_activity && Array.isArray(pool.pool_activity)) {
-        console.log(`Found ${pool.pool_activity.length} activities for pool ${groupId}`)
         setActivities(pool.pool_activity)
       } else {
-        console.log('No activities found for pool', groupId)
         setActivities([])
       }
     } catch (err) {
-      console.error('Failed to fetch activities:', err)
+      // Silently handle errors - don't spam console for expected 503s
       setActivities([])
     } finally {
       setLoading(false)

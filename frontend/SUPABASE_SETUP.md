@@ -78,8 +78,6 @@ After creating the tables, enable RLS policies:
    npm run dev
    ```
 
-## Troubleshooting
-- Make sure there are no extra spaces or quotes in your `.env.local` file
 
 ### "Table doesn't exist" error
 - Make sure you ran the SQL schema successfully
