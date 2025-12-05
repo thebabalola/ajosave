@@ -39,5 +39,47 @@ contract BaseSafeFactoryTest is Test {
         vm.expectRevert("treasury 0");
         new BaseSafeFactory(address(token), address(0));
     }
+
+    function test_CreateRotational() public {
+        address[] memory members = new address[](2);
+        members[0] = user1;
+        members[1] = user2;
+        
+        uint256 depositAmount = 100e18;
+        uint256 roundDuration = 7 days;
+        uint256 treasuryFeeBps = 100; // 1%
+        uint256 relayerFeeBps = 50; // 0.5%
+        
+        vm.expectEmit(true, true, false, false);
+        emit BaseSafeFactory.RotationalCreated(address(0), user1);
+        
+        vm.prank(user1);
+        address pool = factory.createRotational(
+            members,
+            depositAmount,
+            roundDuration,
+            treasuryFeeBps,
+            relayerFeeBps
+        );
+        
+        assertTrue(pool != address(0));
+        assertEq(factory.allRotational().length, 1);
+        assertEq(factory.allRotational()[0], pool);
+    }
+
+    function test_CreateRotationalMultiple() public {
+        address[] memory members = new address[](2);
+        members[0] = user1;
+        members[1] = user2;
+        
+        vm.prank(user1);
+        address pool1 = factory.createRotational(members, 100e18, 7 days, 100, 50);
+        
+        vm.prank(user2);
+        address pool2 = factory.createRotational(members, 200e18, 14 days, 100, 50);
+        
+        assertEq(factory.allRotational().length, 2);
+        assertTrue(pool1 != pool2);
+    }
 }
 
