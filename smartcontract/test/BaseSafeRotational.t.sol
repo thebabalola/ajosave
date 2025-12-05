@@ -193,5 +193,60 @@ contract BaseSafeRotationalTest is Test {
         assertFalse(pool.active());
         assertEq(pool.currentRound(), 3);
     }
+
+    function test_TriggerPayoutWithPenalties() public {
+        // Only 2 out of 3 members deposit
+        token.mint(user1, 1000e18);
+        token.mint(user2, 1000e18);
+        token.mint(user3, 1000e18); // user3 doesn't deposit
+        
+        vm.startPrank(user1);
+        token.approve(address(pool), 200e18); // approve for deposit + potential penalty
+        pool.deposit();
+        vm.stopPrank();
+        
+        vm.startPrank(user2);
+        token.approve(address(pool), 200e18);
+        pool.deposit();
+        vm.stopPrank();
+        
+        // user3 approves but doesn't deposit
+        vm.startPrank(user3);
+        token.approve(address(pool), 200e18);
+        vm.stopPrank();
+        
+        vm.warp(block.timestamp + 7 days);
+        
+        uint256 treasuryBalanceBefore = token.balanceOf(treasury);
+        
+        vm.prank(address(0x999)); // relayer
+        pool.triggerPayout();
+        
+        // user3 should be penalized (10% of depositAmount = 10e18)
+        // Half goes to treasury (5e18)
+        assertGt(token.balanceOf(treasury), treasuryBalanceBefore);
+    }
+
+    function test_TriggerPayoutNoDeposits() public {
+        vm.warp(block.timestamp + 7 days);
+        
+        vm.expectRevert("no deposits");
+        pool.triggerPayout();
+    }
+
+    function test_IsMember() public {
+        assertTrue(pool.isMember(user1));
+        assertTrue(pool.isMember(user2));
+        assertTrue(pool.isMember(user3));
+        assertFalse(pool.isMember(address(0x999)));
+    }
+
+    function test_MembersList() public {
+        address[] memory members = pool.membersList();
+        assertEq(members.length, 3);
+        assertEq(members[0], user1);
+        assertEq(members[1], user2);
+        assertEq(members[2], user3);
+    }
 }
 
