@@ -1,4 +1,4 @@
-import { useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt, usePublicClient, useReadContract, useAccount } from 'wagmi'
 import { parseEther } from 'viem'
 import { useEffect, useState } from 'react'
 
@@ -52,6 +52,34 @@ const ROTATIONAL_ABI = [
     inputs: [],
     outputs: [],
   },
+  {
+    name: 'depositAmount',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'isMember',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'who', type: 'address' }],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+  {
+    name: 'hasDeposited',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: '', type: 'address' }],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+  {
+    name: 'active',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'bool' }],
+  },
 ] as const
 
 const TARGET_ABI = [
@@ -99,6 +127,40 @@ const ERC20_ABI = [
     ],
     outputs: [{ name: '', type: 'bool' }],
   },
+  {
+    name: 'allowance',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'mint',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [],
+  },
+  {
+    name: 'owner',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address' }],
+  },
 ] as const
 
 const FACTORY_ADDRESS = (process.env.NEXT_PUBLIC_FACTORY_ADDRESS || '0xa71C861930C0973AE57c577aC19EB7f11e7d74a6') as `0x${string}`
@@ -140,18 +202,22 @@ async function extractPoolAddress(publicClient: any, txHash: `0x${string}`): Pro
 export function useApproveToken(spender: string, amount: string) {
   const parsedAmount = amount ? parseEther(amount) : BigInt(0)
 
-  const { writeContract, data, isPending } = useWriteContract()
+  const { writeContract, data, isPending, error: writeError } = useWriteContract()
   const { isLoading: isWaiting, isSuccess } = useWaitForTransactionReceipt({ 
     hash: data 
   })
 
   const approve = () => {
-    writeContract({
-      address: TOKEN_ADDRESS,
-      abi: ERC20_ABI,
-      functionName: 'approve',
-      args: [spender as `0x${string}`, parsedAmount],
-    })
+    try {
+      writeContract({
+        address: TOKEN_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: 'approve',
+        args: [spender as `0x${string}`, parsedAmount],
+      })
+    } catch (err) {
+      console.error('Approve error:', err)
+    }
   }
 
   return {
@@ -159,29 +225,197 @@ export function useApproveToken(spender: string, amount: string) {
     isLoading: isPending || isWaiting,
     isSuccess,
     hash: data,
+    error: writeError,
   }
 }
 
 // ROTATIONAL POOL HOOKS
 export function useRotationalDeposit(poolAddress: string) {
-  const { writeContract, data, isPending } = useWriteContract()
-  const { isLoading: isWaiting, isSuccess } = useWaitForTransactionReceipt({ 
+  const { writeContract, data, isPending, error: writeError } = useWriteContract()
+  const { isLoading: isWaiting, isSuccess, data: receipt } = useWaitForTransactionReceipt({ 
     hash: data 
   })
 
   const deposit = () => {
-    writeContract({
-      address: poolAddress as `0x${string}`,
-      abi: ROTATIONAL_ABI,
-      functionName: 'deposit',
-    })
+    try {
+      writeContract({
+        address: poolAddress as `0x${string}`,
+        abi: ROTATIONAL_ABI,
+        functionName: 'deposit',
+      })
+    } catch (err) {
+      console.error('Deposit error:', err)
+    }
   }
 
   return {
     deposit,
     isLoading: isPending || isWaiting,
     isSuccess,
+    hash: data || receipt?.transactionHash,
+    error: writeError,
+  }
+}
+
+// Hook to read depositAmount from rotational pool
+export function useRotationalDepositAmount(poolAddress: string) {
+  const { data, isLoading, error } = useReadContract({
+    address: poolAddress as `0x${string}`,
+    abi: ROTATIONAL_ABI,
+    functionName: 'depositAmount',
+    query: {
+      enabled: !!poolAddress,
+    },
+  })
+
+  return {
+    depositAmount: data,
+    isLoading,
+    error,
+  }
+}
+
+// Hook to check token allowance
+export function useTokenAllowance(owner: string, spender: string) {
+  const { data, isLoading, error } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: 'allowance',
+    args: [owner as `0x${string}`, spender as `0x${string}`],
+    query: {
+      enabled: !!owner && !!spender,
+    },
+  })
+
+  return {
+    allowance: data,
+    isLoading,
+    error,
+  }
+}
+
+// Hook to check token balance
+export function useTokenBalance(account: string) {
+  const { data, isLoading, error } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: [account as `0x${string}`],
+    query: {
+      enabled: !!account,
+    },
+  })
+
+  return {
+    balance: data,
+    isLoading,
+    error,
+  }
+}
+
+// Hook to check if user is member of rotational pool
+export function useIsRotationalMember(poolAddress: string, userAddress: string) {
+  const { data, isLoading, error } = useReadContract({
+    address: poolAddress as `0x${string}`,
+    abi: ROTATIONAL_ABI,
+    functionName: 'isMember',
+    args: [userAddress as `0x${string}`],
+    query: {
+      enabled: !!poolAddress && !!userAddress,
+    },
+  })
+
+  return {
+    isMember: data,
+    isLoading,
+    error,
+  }
+}
+
+// Hook to check if user has already deposited in rotational pool
+export function useHasDeposited(poolAddress: string, userAddress: string) {
+  const { data, isLoading, error } = useReadContract({
+    address: poolAddress as `0x${string}`,
+    abi: ROTATIONAL_ABI,
+    functionName: 'hasDeposited',
+    args: [userAddress as `0x${string}`],
+    query: {
+      enabled: !!poolAddress && !!userAddress,
+    },
+  })
+
+  return {
+    hasDeposited: data,
+    isLoading,
+    error,
+  }
+}
+
+// Hook to check if pool is active
+export function usePoolActive(poolAddress: string) {
+  const { data, isLoading, error } = useReadContract({
+    address: poolAddress as `0x${string}`,
+    abi: ROTATIONAL_ABI,
+    functionName: 'active',
+    query: {
+      enabled: !!poolAddress,
+    },
+  })
+
+  return {
+    active: data,
+    isLoading,
+    error,
+  }
+}
+
+// Hook to mint tokens (for testnet/owner only)
+export function useMintTokens(amount: string) {
+  const parsedAmount = amount ? parseEther(amount) : BigInt(0)
+  const { address } = useAccount()
+  const { writeContract, data, isPending, error: writeError } = useWriteContract()
+  const { isLoading: isWaiting, isSuccess } = useWaitForTransactionReceipt({ 
+    hash: data 
+  })
+
+  // Check if user is owner
+  const { data: owner } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: 'owner',
+    query: {
+      enabled: !!address,
+    },
+  })
+
+  const isOwner = owner && address && owner.toLowerCase() === address.toLowerCase()
+
+  const mint = () => {
+    if (!address) {
+      throw new Error("Please connect your wallet")
+    }
+    if (!isOwner) {
+      throw new Error("Only token owner can mint")
+    }
+    try {
+      writeContract({
+        address: TOKEN_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: 'mint',
+        args: [address as `0x${string}`, parsedAmount],
+      })
+    } catch (err) {
+      console.error('Mint error:', err)
+    }
+  }
+
+  return {
+    mint,
+    isLoading: isPending || isWaiting,
+    isSuccess,
     hash: data,
+    error: writeError,
+    isOwner,
   }
 }
 
