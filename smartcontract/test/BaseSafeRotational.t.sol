@@ -248,5 +248,75 @@ contract BaseSafeRotationalTest is Test {
         assertEq(members[1], user2);
         assertEq(members[2], user3);
     }
+
+    function test_DepositInactivePool() public {
+        // Deactivate pool
+        pool.transferOwnership(user1);
+        vm.prank(user1);
+        // Note: There's no deactivate function, so we'll test after completion
+        
+        // Complete all rounds to deactivate
+        for (uint i = 0; i < 3; i++) {
+            token.mint(user1, 1000e18);
+            token.mint(user2, 1000e18);
+            token.mint(user3, 1000e18);
+            
+            vm.startPrank(user1);
+            token.approve(address(pool), 100e18);
+            pool.deposit();
+            vm.stopPrank();
+            
+            vm.startPrank(user2);
+            token.approve(address(pool), 100e18);
+            pool.deposit();
+            vm.stopPrank();
+            
+            vm.startPrank(user3);
+            token.approve(address(pool), 100e18);
+            pool.deposit();
+            vm.stopPrank();
+            
+            vm.warp(block.timestamp + 7 days);
+            pool.triggerPayout();
+        }
+        
+        // Try to deposit after pool is inactive
+        token.mint(user1, 1000e18);
+        vm.startPrank(user1);
+        token.approve(address(pool), 100e18);
+        vm.expectRevert("pool inactive");
+        pool.deposit();
+        vm.stopPrank();
+    }
+
+    function test_TriggerPayoutInactivePool() public {
+        // Complete all rounds
+        for (uint i = 0; i < 3; i++) {
+            token.mint(user1, 1000e18);
+            token.mint(user2, 1000e18);
+            token.mint(user3, 1000e18);
+            
+            vm.startPrank(user1);
+            token.approve(address(pool), 100e18);
+            pool.deposit();
+            vm.stopPrank();
+            
+            vm.startPrank(user2);
+            token.approve(address(pool), 100e18);
+            pool.deposit();
+            vm.stopPrank();
+            
+            vm.startPrank(user3);
+            token.approve(address(pool), 100e18);
+            pool.deposit();
+            vm.stopPrank();
+            
+            vm.warp(block.timestamp + 7 days);
+            pool.triggerPayout();
+        }
+        
+        vm.expectRevert("pool inactive");
+        pool.triggerPayout();
+    }
 }
 
