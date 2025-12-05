@@ -13,6 +13,120 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
 
+    // Check if this is an activity log request
+    if (body.poolId && body.activityType) {
+      let { poolId, activityType, userAddress, amount, txHash, description, contractAddress } = body
+      
+      console.log('Activity log request:', { poolId, activityType, userAddress, amount, txHash, contractAddress })
+      
+      if (!poolId || !activityType) {
+        return NextResponse.json(
+          { error: 'Missing required fields: poolId and activityType' },
+          { status: 400 }
+        )
+      }
+
+      try {
+        // First verify the pool exists
+        const { data: poolCheck, error: poolCheckError } = await supabase
+          .from('pools')
+          .select('id')
+          .eq('id', poolId)
+          .single()
+
+        if (poolCheckError || !poolCheck) {
+          console.error('Pool not found in database:', poolId, poolCheckError)
+          // Try to find by contract address as fallback
+          if (contractAddress) {
+            const { data: poolByContract } = await supabase
+              .from('pools')
+              .select('id')
+              .eq('contract_address', contractAddress.toLowerCase())
+              .single()
+            
+            if (poolByContract) {
+              // Use the found pool ID
+              poolId = poolByContract.id
+              console.log('Found pool by contract address, using ID:', poolId)
+            } else {
+              return NextResponse.json(
+                { 
+                  error: `Pool not found in database. The pool may have been created on-chain but not saved to the database. Pool ID: ${poolId}, Contract: ${contractAddress}`,
+                  suggestion: 'Please ensure the pool was created through the create pool form, or manually add it to the database.'
+                },
+                { status: 404 }
+              )
+            }
+          } else {
+            return NextResponse.json(
+              { 
+                error: `Pool not found in database. The pool may have been created on-chain but not saved to the database. Pool ID: ${poolId}`,
+                suggestion: 'Please ensure the pool was created through the create pool form, or manually add it to the database.'
+              },
+              { status: 404 }
+            )
+          }
+        }
+
+        // Insert activity
+        const { data, error } = await supabase
+          .from('pool_activity')
+          .insert([
+            {
+              pool_id: poolId,
+              activity_type: activityType,
+              user_address: userAddress?.toLowerCase() || null,
+              amount: amount || null,
+              tx_hash: txHash || null,
+              description: description || `${activityType} completed`,
+            },
+          ])
+          .select()
+
+        if (error) {
+          console.error('Supabase insert error:', error)
+          throw error
+        }
+
+        console.log('Activity inserted:', data)
+
+        // Update pool total_saved if it's a deposit/contribute
+        if (activityType === 'deposit' || activityType === 'contribute') {
+          const { data: pool, error: poolError } = await supabase
+            .from('pools')
+            .select('total_saved')
+            .eq('id', poolId)
+            .single()
+
+          if (poolError) {
+            console.error('Error fetching pool:', poolError)
+          } else if (pool) {
+            const newTotal = (Number(pool.total_saved) || 0) + (Number(amount) || 0)
+            const { error: updateError } = await supabase
+              .from('pools')
+              .update({ total_saved: newTotal })
+              .eq('id', poolId)
+
+            if (updateError) {
+              console.error('Error updating pool total:', updateError)
+            } else {
+              console.log('Pool total updated:', newTotal)
+            }
+          }
+        }
+
+        return NextResponse.json({ success: true, activity: data?.[0] }, { status: 201 })
+      } catch (error) {
+        console.error('Failed to log activity:', error)
+        const errorMessage = error instanceof Error ? error.message : 'Failed to log activity'
+        return NextResponse.json(
+          { error: errorMessage, details: error },
+          { status: 500 }
+        )
+      }
+    }
+
+    // Original pool creation logic
     const {
       name,
       description,
@@ -161,14 +275,30 @@ export async function GET(req: NextRequest) {
       if (error) {
         // Check if it's a table not found error (schema not set up)
         if (error.code === 'PGRST205' || (error.message && error.message.includes("Could not find the table"))) {
-          throw new Error('Database tables not found. Please run the SQL schema to create the required tables.')
+          return NextResponse.json(
+            { 
+              error: 'Database tables not found. Please run the SQL schema to create the required tables.',
+              details: 'See frontend/supabase_schema.sql for the schema. Run it in your Supabase SQL editor.'
+            },
+            { status: 503 }
+          )
         }
         // Check if it's a fetch/connection error
         const errorMsg = error.message || String(error) || ''
         if (errorMsg.includes('fetch failed') || errorMsg.includes('ECONNREFUSED') || errorMsg.includes('ENOTFOUND')) {
-          throw new Error('Unable to connect to Supabase')
+          return NextResponse.json(
+            { 
+              error: 'Unable to connect to Supabase. Please check your NEXT_PUBLIC_SUPABASE_URL and ensure Supabase is running.',
+              details: 'This usually means Supabase credentials are missing or invalid. Check your .env.local file.'
+            },
+            { status: 503 }
+          )
         }
-        throw error
+        // Return 503 for other Supabase errors instead of throwing
+        return NextResponse.json(
+          { error: errorMsg || 'Database error occurred' },
+          { status: 503 }
+        )
       }
 
       return NextResponse.json(data || [])
@@ -183,14 +313,30 @@ export async function GET(req: NextRequest) {
       if (error) {
         // Check if it's a table not found error (schema not set up)
         if (error.code === 'PGRST205' || (error.message && error.message.includes("Could not find the table"))) {
-          throw new Error('Database tables not found. Please run the SQL schema to create the required tables.')
+          return NextResponse.json(
+            { 
+              error: 'Database tables not found. Please run the SQL schema to create the required tables.',
+              details: 'See frontend/supabase_schema.sql for the schema. Run it in your Supabase SQL editor.'
+            },
+            { status: 503 }
+          )
         }
         // Check if it's a fetch/connection error
         const errorMsg = error.message || String(error) || ''
         if (errorMsg.includes('fetch failed') || errorMsg.includes('ECONNREFUSED') || errorMsg.includes('ENOTFOUND')) {
-          throw new Error('Unable to connect to Supabase')
+          return NextResponse.json(
+            { 
+              error: 'Unable to connect to Supabase. Please check your NEXT_PUBLIC_SUPABASE_URL and ensure Supabase is running.',
+              details: 'This usually means Supabase credentials are missing or invalid. Check your .env.local file.'
+            },
+            { status: 503 }
+          )
         }
-        throw error
+        // Return 503 for other Supabase errors instead of throwing
+        return NextResponse.json(
+          { error: errorMsg || 'Database error occurred' },
+          { status: 503 }
+        )
       }
 
       return NextResponse.json(data || [])
@@ -225,9 +371,10 @@ export async function GET(req: NextRequest) {
       console.error('Pool fetch error:', error)
     }
     
+    // Return 503 instead of 500 for unexpected errors to be consistent
     return NextResponse.json(
-      { error: errorMsg },
-      { status: 500 }
+      { error: errorMsg || 'Service temporarily unavailable' },
+      { status: 503 }
     )
   }
 }
