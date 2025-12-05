@@ -25,5 +25,28 @@ contract BaseTokenTest is Test {
         assertEq(token.owner(), owner);
         assertEq(token.totalSupply(), 0);
     }
+
+    function test_Mint() public {
+        uint256 amount = 1000e18;
+        token.mint(user1, amount);
+        
+        assertEq(token.balanceOf(user1), amount);
+        assertEq(token.totalSupply(), amount);
+    }
+
+    function test_MintMultiple() public {
+        token.mint(user1, 100e18);
+        token.mint(user2, 200e18);
+        
+        assertEq(token.balanceOf(user1), 100e18);
+        assertEq(token.balanceOf(user2), 200e18);
+        assertEq(token.totalSupply(), 300e18);
+    }
+
+    function test_MintFuzz(uint256 amount) public {
+        vm.assume(amount < type(uint256).max / 2);
+        token.mint(user1, amount);
+        assertEq(token.balanceOf(user1), amount);
+    }
 }
 
