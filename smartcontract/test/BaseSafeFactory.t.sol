@@ -158,5 +158,24 @@ contract BaseSafeFactoryTest is Test {
         assertEq(factory.allFlexible().length, 2);
         assertTrue(pool1 != pool2);
     }
+
+    function test_SetTreasury() public {
+        address newTreasury = address(0x200);
+        factory.setTreasury(newTreasury);
+        assertEq(factory.treasury(), newTreasury);
+    }
+
+    function test_SetTreasuryOnlyOwner() public {
+        address newTreasury = address(0x200);
+        
+        vm.prank(user1);
+        vm.expectRevert("only owner");
+        factory.setTreasury(newTreasury);
+    }
+
+    function test_SetTreasuryToZeroAddress() public {
+        vm.expectRevert("treasury 0");
+        factory.setTreasury(address(0));
+    }
 }
 
