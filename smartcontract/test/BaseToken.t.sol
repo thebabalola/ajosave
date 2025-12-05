@@ -71,5 +71,30 @@ contract BaseTokenTest is Test {
         vm.expectRevert("Only owner");
         token.transferOwnership(user1);
     }
+
+    function test_TransferOwnershipToZeroAddress() public {
+        vm.expectRevert("New owner is zero address");
+        token.transferOwnership(address(0));
+    }
+
+    function test_ERC20Transfer() public {
+        token.mint(owner, 1000e18);
+        token.transfer(user1, 500e18);
+        
+        assertEq(token.balanceOf(owner), 500e18);
+        assertEq(token.balanceOf(user1), 500e18);
+    }
+
+    function test_ERC20ApproveAndTransferFrom() public {
+        token.mint(owner, 1000e18);
+        token.approve(user1, 300e18);
+        
+        vm.prank(user1);
+        token.transferFrom(owner, user2, 300e18);
+        
+        assertEq(token.balanceOf(owner), 700e18);
+        assertEq(token.balanceOf(user2), 300e18);
+        assertEq(token.allowance(owner, user1), 0);
+    }
 }
 
