@@ -1,15 +1,18 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useAppKit } from "@reown/appkit/react"
 import { useAccount } from "wagmi"
-import { Coins, Menu } from "lucide-react"
+import { Coins, Menu, CheckCircle2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useSelfId } from "@/hooks/useSelfId"
 
 export function DashboardHeader() {
   const { open } = useAppKit()
   const { address } = useAccount()
+  const { isLinked } = useSelfId()
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-lg">
@@ -23,6 +26,12 @@ export function DashboardHeader() {
           </Link>
 
           <div className="flex items-center gap-4">
+            {isLinked && (
+              <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20 hidden sm:flex">
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+                Verified
+              </Badge>
+            )}
             <Button onClick={() => open()} variant="outline" className="hidden sm:flex">
               {address?.slice(0, 6)}...{address?.slice(-4)}
             </Button>
@@ -34,6 +43,12 @@ export function DashboardHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {isLinked && (
+                  <DropdownMenuItem disabled>
+                    <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                    Verified Identity
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => open()}>
                   Wallet: {address?.slice(0, 6)}...{address?.slice(-4)}
                 </DropdownMenuItem>
