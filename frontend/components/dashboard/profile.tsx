@@ -2,11 +2,23 @@
 
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { useAccount } from "wagmi"
-import { Wallet, Award, TrendingUp, Users } from "lucide-react"
+import { Wallet, Award, TrendingUp, Users, CheckCircle2 } from "lucide-react"
+import { useSelfId } from "@/hooks/useSelfId"
+import { SelfVerification } from "@/components/self"
 
 export function Profile() {
   const { address } = useAccount()
+  const {
+    isLinked,
+    handle,
+    linkSelfId,
+    handleVerificationSuccess,
+    handleVerificationError,
+    showVerification,
+    setShowVerification,
+  } = useSelfId()
 
   // Mock profile data
   const profileData = {
@@ -51,7 +63,17 @@ export function Profile() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-border">
+            <div className="pt-4 border-t border-border space-y-3">
+              {isLinked ? (
+                <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  Verified Identity
+                </Badge>
+              ) : (
+                <Button onClick={linkSelfId} variant="outline" size="sm" className="w-full">
+                  Verify Identity
+                </Button>
+              )}
               <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
                 <Award className="h-3 w-3 mr-1" />
                 Trusted Member
@@ -117,6 +139,14 @@ export function Profile() {
           </li>
         </ul>
       </Card>
+
+      {showVerification && (
+        <SelfVerification
+          onSuccess={handleVerificationSuccess}
+          onError={handleVerificationError}
+          onClose={() => setShowVerification(false)}
+        />
+      )}
     </div>
   )
 }
