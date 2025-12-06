@@ -1,0 +1,11 @@
+# Temporary commit fixing scripts
+fix_commit_dates.sh
+fix_commit_dates_v2.sh
+fix_commit_dates_final.sh
+frontend/fix_commit_dates.sh
+
+# Planning and documentation files
+SELF_XYZ_IMPLEMENTATION_PLAN.md
+frontend/SELF_XYZ_COMMIT_PLAN.md
+frontend/commit_times_self.sh
+
