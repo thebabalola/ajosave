@@ -56,7 +56,7 @@ contract BaseSafeRotational is Ownable(msg.sender), ReentrancyGuard {
         active = true;
     }
 
-    function deposit() external {
+    function deposit() external nonReentrant {
         require(active, "pool inactive");
         require(isMember(msg.sender), "not member");
         require(!hasDeposited[msg.sender], "already deposited");
@@ -68,7 +68,7 @@ contract BaseSafeRotational is Ownable(msg.sender), ReentrancyGuard {
         emit Deposit(msg.sender, depositAmount);
     }
 
-    function triggerPayout() external {
+    function triggerPayout() external nonReentrant {
         require(active, "pool inactive");
         require(block.timestamp >= nextPayoutTime, "too early");
 
