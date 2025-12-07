@@ -3,9 +3,10 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /* ========== ROTATIONAL POOL ========== */
-contract BaseSafeRotational is Ownable(msg.sender) {
+contract BaseSafeRotational is Ownable(msg.sender), ReentrancyGuard {
     address[] public members;
     mapping(address => bool) public hasDeposited;
     uint256 public totalMembers;
@@ -55,7 +56,7 @@ contract BaseSafeRotational is Ownable(msg.sender) {
         active = true;
     }
 
-    function deposit() external {
+    function deposit() external nonReentrant {
         require(active, "pool inactive");
         require(isMember(msg.sender), "not member");
         require(!hasDeposited[msg.sender], "already deposited");
@@ -67,7 +68,7 @@ contract BaseSafeRotational is Ownable(msg.sender) {
         emit Deposit(msg.sender, depositAmount);
     }
 
-    function triggerPayout() external {
+    function triggerPayout() external nonReentrant {
         require(active, "pool inactive");
         require(block.timestamp >= nextPayoutTime, "too early");
 
@@ -191,7 +192,7 @@ contract BaseSafeTarget is Ownable(msg.sender) {
         active = true;
     }
 
-    function contribute(uint256 amount) external {
+    function contribute(uint256 amount) external nonReentrant {
         require(active, "pool inactive");
         require(isMember(msg.sender), "not member");
         require(block.timestamp <= deadline, "deadline passed");
@@ -211,7 +212,7 @@ contract BaseSafeTarget is Ownable(msg.sender) {
         }
     }
 
-    function withdraw() external {
+    function withdraw() external nonReentrant {
         require(completed || block.timestamp > deadline, "not ready");
         require(contributions[msg.sender] > 0, "no contribution");
 
@@ -228,7 +229,7 @@ contract BaseSafeTarget is Ownable(msg.sender) {
         emit Withdrawal(msg.sender, userShare);
     }
 
-    function treasuryWithdraw() external onlyOwner {
+    function treasuryWithdraw() external onlyOwner nonReentrant {
         require(completed || block.timestamp > deadline, "not ready");
 
         uint256 totalFees = (totalContributed * treasuryFeeBps) / BPS;
@@ -295,7 +296,7 @@ contract BaseSafeFlexible is Ownable(msg.sender) {
         active = true;
     }
 
-    function deposit(uint256 amount) external {
+    function deposit(uint256 amount) external nonReentrant {
         require(active, "pool inactive");
         require(isMember(msg.sender), "not member");
         require(amount >= minimumDeposit, "below minimum");
@@ -309,7 +310,7 @@ contract BaseSafeFlexible is Ownable(msg.sender) {
         emit Deposited(msg.sender, amount);
     }
 
-    function withdraw(uint256 amount) external {
+    function withdraw(uint256 amount) external nonReentrant {
         require(amount > 0, "amount 0");
         require(balances[msg.sender] >= amount, "insufficient balance");
 
@@ -330,7 +331,7 @@ contract BaseSafeFlexible is Ownable(msg.sender) {
         emit Withdrawn(msg.sender, netAmount, fee);
     }
 
-    function distributeYield(uint256 yieldAmount) external onlyOwner {
+    function distributeYield(uint256 yieldAmount) external onlyOwner nonReentrant {
         require(yieldEnabled, "yield disabled");
         require(yieldAmount > 0, "yield 0");
         require(totalBalance > 0, "no balance");
