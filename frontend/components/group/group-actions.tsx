@@ -193,8 +193,12 @@ export function GroupActions({
       if (!loggedTransactions.current.has(txHash)) {
         loggedTransactions.current.add(txHash)
         const amount = contractDepositAmount ? (Number(contractDepositAmount) / 1e18).toString() : depositAmount || "0"
+        console.log('Rotational deposit confirmed, logging to database:', { txHash, amount, poolId: groupId, poolAddress })
         setSuccess(`Deposit successful! Transaction: ${txHash.slice(0, 10)}...`)
-        logDepositActivity(txHash, amount, 'deposit')
+        logDepositActivity(txHash, amount, 'deposit').catch(err => {
+          console.error('Failed to log deposit activity:', err)
+          setError(`Deposit successful but failed to log: ${err instanceof Error ? err.message : 'Unknown error'}`)
+        })
         setDepositAmount("")
         setApproved(false)
         setError("")
@@ -210,8 +214,12 @@ export function GroupActions({
       const txHash = targetContribute.hash
       if (!loggedTransactions.current.has(txHash)) {
         loggedTransactions.current.add(txHash)
+        console.log('Target contribution confirmed, logging to database:', { txHash, amount: depositAmount, poolId: groupId, poolAddress })
         setSuccess(`Contribution successful! Transaction: ${txHash.slice(0, 10)}...`)
-        logDepositActivity(txHash, depositAmount || "0", 'contribute')
+        logDepositActivity(txHash, depositAmount || "0", 'contribute').catch(err => {
+          console.error('Failed to log contribution activity:', err)
+          setError(`Contribution successful but failed to log: ${err instanceof Error ? err.message : 'Unknown error'}`)
+        })
         setDepositAmount("")
         setApproved(false)
         setError("")
@@ -226,8 +234,12 @@ export function GroupActions({
       const txHash = flexibleDeposit.hash
       if (!loggedTransactions.current.has(txHash)) {
         loggedTransactions.current.add(txHash)
+        console.log('Flexible deposit confirmed, logging to database:', { txHash, amount: depositAmount, poolId: groupId, poolAddress })
         setSuccess(`Deposit successful! Transaction: ${txHash.slice(0, 10)}...`)
-        logDepositActivity(txHash, depositAmount || "0", 'deposit')
+        logDepositActivity(txHash, depositAmount || "0", 'deposit').catch(err => {
+          console.error('Failed to log deposit activity:', err)
+          setError(`Deposit successful but failed to log: ${err instanceof Error ? err.message : 'Unknown error'}`)
+        })
         setDepositAmount("")
         setApproved(false)
         setError("")
