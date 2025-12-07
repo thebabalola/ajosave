@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
 
         // Update pool total_saved if it's a deposit/contribute
         if (activityType === 'deposit' || activityType === 'contribute') {
+          console.log('Updating pool total_saved:', { poolId, amount, activityType })
           const { data: pool, error: poolError } = await supabase
             .from('pools')
             .select('total_saved')
@@ -99,19 +100,27 @@ export async function POST(req: NextRequest) {
             .single()
 
           if (poolError) {
-            console.error('Error fetching pool:', poolError)
+            console.error('Error fetching pool for total update:', poolError)
           } else if (pool) {
-            const newTotal = (Number(pool.total_saved) || 0) + (Number(amount) || 0)
-            const { error: updateError } = await supabase
+            const currentTotal = Number(pool.total_saved) || 0
+            const depositAmount = Number(amount) || 0
+            const newTotal = currentTotal + depositAmount
+            console.log('Calculating new total:', { currentTotal, depositAmount, newTotal })
+            
+            const { data: updatedPool, error: updateError } = await supabase
               .from('pools')
               .update({ total_saved: newTotal })
               .eq('id', poolId)
+              .select()
+              .single()
 
             if (updateError) {
               console.error('Error updating pool total:', updateError)
             } else {
-              console.log('Pool total updated:', newTotal)
+              console.log('Pool total updated successfully:', { poolId, oldTotal: currentTotal, newTotal, updatedPool })
             }
+          } else {
+            console.warn('Pool not found when trying to update total_saved:', poolId)
           }
         }
 

@@ -251,8 +251,8 @@ export function useRotationalDeposit(poolAddress: string) {
   return {
     deposit,
     isLoading: isPending || isWaiting,
-    isSuccess,
-    hash: data || receipt?.transactionHash,
+    isSuccess: isSuccess && !!data, // Only true when transaction is confirmed AND hash is available
+    hash: data, // data from useWriteContract is the transaction hash
     error: writeError,
   }
 }
@@ -440,7 +440,7 @@ export function useTargetContribute(poolAddress: string, amount: string) {
   return {
     contribute,
     isLoading: isPending || isWaiting,
-    isSuccess,
+    isSuccess: isSuccess && !!data, // Only true when transaction is confirmed AND hash is available
     hash: data,
   }
 }
@@ -488,7 +488,7 @@ export function useFlexibleDeposit(poolAddress: string, amount: string) {
   return {
     deposit,
     isLoading: isPending || isWaiting,
-    isSuccess,
+    isSuccess: isSuccess && !!data, // Only true when transaction is confirmed AND hash is available
     hash: data,
   }
 }
