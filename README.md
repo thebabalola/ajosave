@@ -253,3 +253,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Note**: Contract names like `BaseSafeFactory` remain unchanged as they are technical identifiers and would require contract redeployment to change.
 
+## 🔄 CI/CD
+
+Automated testing and contract verification workflows are configured via GitHub Actions. See `.github/workflows/test.yml` for details.
+
