@@ -38,8 +38,19 @@ jobs:
       - name: Build contracts
         run: forge build
 
-      - name: Run tests
-        run: forge test --gas-report
+      - name: Run tests with gas report
+        run: forge test --gas-report > gas-report.txt 2>&1 || true
+
+      - name: Display gas report
+        run: cat gas-report.txt
+
+      - name: Upload gas report artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gas-report
+          path: smartcontract/gas-report.txt
+          retention-days: 30
 
       - name: Run tests with verbose output
         if: failure()
